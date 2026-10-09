@@ -324,6 +324,7 @@ export const AllGamesPage: React.FC = () => {
 
   const handleResetPills = () => {
     setArenaPills(DEFAULT_ARENA_PILLS);
+    setArenaPill('all');
     localStorage.removeItem(PILLS_STORAGE_KEY);
     toast.info('Tabs Reset', 'Restored default arena tabs.');
   };
@@ -444,6 +445,20 @@ export const AllGamesPage: React.FC = () => {
               );
             })}
 
+            <button
+              type="button"
+              onClick={handleOpenNewPill}
+              className="px-3 py-1.5 rounded-lg border border-dashed border-slate-300 text-xs font-semibold text-slate-600 hover:bg-slate-50 whitespace-nowrap"
+            >
+              + Add tab
+            </button>
+            <button
+              type="button"
+              onClick={handleResetPills}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-500 hover:bg-slate-100 whitespace-nowrap"
+            >
+              Reset tabs
+            </button>
           </div>
         </div>
 

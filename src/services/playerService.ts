@@ -6,6 +6,7 @@ import type {
   PlayerSession,
   PlayerActivityEvent,
   PlayerMetrics,
+  PlayerStatus,
 } from '../types/player';
 import { adminRequest } from '../lib/adminApi';
 
@@ -675,7 +676,9 @@ export const playerService = {
       method: 'PATCH',
       body: JSON.stringify({ status: 'BANNED' })
     });
-    return (await this.getPlayer(id)) as Player;
+    const updated = (await this.getPlayer(id)) as Player;
+    await this.logActivity(updated.id, `Account blocked: ${reason}`, 'risk');
+    return updated;
   },
 
   async unblockPlayer(id: string): Promise<Player> {

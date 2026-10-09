@@ -11,7 +11,7 @@ export const gameFormSchema = z
     name: z.string().min(3, 'Game Name must be at least 3 characters'),
     subtitle: z.string(),
     description: z.string(),
-    category: z.string().min(1, 'Category is required'),
+    category: z.enum(['Card', 'Arcade', 'Board', 'Strategy', 'Wheel', 'Crash', 'Other']),
     status: z.enum(['live', 'enabled', 'disabled', 'scheduled', 'completed']),
     visibility: z.enum(['public', 'private']),
 
