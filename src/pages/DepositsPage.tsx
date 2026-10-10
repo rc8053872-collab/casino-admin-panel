@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { depositService } from '../services/depositService';
 import type { DepositItem, DepositFilters, DepositStats } from '../types/deposit';
 import { useToast } from '../hooks/useToast';
@@ -9,7 +8,6 @@ import DepositKpiCards from '../components/deposits/DepositKpiCards';
 import DepositFilterBar from '../components/deposits/DepositFilterBar';
 import DepositTable from '../components/deposits/DepositTable';
 import DepositReceiptDrawer from '../components/deposits/DepositReceiptDrawer';
-import { pageVariants } from '../animations/variants';
 
 const EMPTY_STATS: DepositStats = {
   totalMonthVolume: 0, totalMonthCount: 0, volumeGrowthText: '', todayVolume: 0, todayCount: 0,
@@ -192,13 +190,7 @@ export const DepositsPage: React.FC = () => {
   };
 
   return (
-    <motion.div
-      variants={pageVariants}
-      initial="initial"
-      animate="animate"
-      exit="exit"
-      className="space-y-4 max-w-[1440px] mx-auto pb-14 text-slate-800 text-xs"
-    >
+    <div className="space-y-4 max-w-[1440px] mx-auto pb-14 text-slate-800 text-xs">
       {/* 1. Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border border-slate-200/90 rounded-2xl p-4 shadow-2xs">
         <div>
@@ -260,7 +252,7 @@ export const DepositsPage: React.FC = () => {
         onReject={(deposit) => void handleDepositDecision(deposit, 'reject')}
       />
 
-    </motion.div>
+    </div>
   );
 };
 
