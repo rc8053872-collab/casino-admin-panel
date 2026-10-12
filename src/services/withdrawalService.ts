@@ -34,6 +34,10 @@ function mapWithdrawal(item: BackendWithdrawal): Withdrawal {
         bank?: { accountNumber?: string; ifscCode?: string; branchName?: string };
         rejectionReason?: string;
         underReview?: boolean;
+        feePercent?: number;
+        feeAmount?: number;
+        finalAmount?: number;
+        originalAmount?: number;
       }
     : {};
   const bank = metadata.bank || {};
@@ -56,6 +60,9 @@ function mapWithdrawal(item: BackendWithdrawal): Withdrawal {
     playerTier: 'Member',
     avatarInitials: initials,
     amount: Number(item.amount),
+    feePercent: metadata.feePercent !== undefined ? Number(metadata.feePercent) : undefined,
+    feeAmount: metadata.feeAmount !== undefined ? Number(metadata.feeAmount) : undefined,
+    finalAmount: metadata.finalAmount !== undefined ? Number(metadata.finalAmount) : Number(item.amount),
     currency: 'INR',
     method: 'IMPS',
     destination: {

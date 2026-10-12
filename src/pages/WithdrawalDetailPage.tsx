@@ -136,9 +136,17 @@ export const WithdrawalDetailPage: React.FC = () => {
         {/* Right Action Buttons */}
         <div className="flex items-center gap-2 flex-wrap">
           <div className="text-right mr-3 hidden md:block">
-            <span className="text-[10px] text-slate-400 uppercase font-bold block">Gross Payout</span>
-            <span className="text-2xl font-bold text-slate-900 font-mono tracking-tight">
+            <span className="text-[10px] text-slate-400 uppercase font-bold block">Gross Requested</span>
+            <span className="text-xl font-bold text-slate-900 font-mono tracking-tight block">
               {formatINR(withdrawal.amount)}
+            </span>
+            {withdrawal.feePercent !== undefined && withdrawal.feePercent > 0 && (
+              <span className="text-[10px] text-amber-700 font-semibold block">
+                Fee Cut: -{formatINR(withdrawal.feeAmount || 0)} ({withdrawal.feePercent}%)
+              </span>
+            )}
+            <span className="text-xs font-extrabold text-emerald-700 font-mono block">
+              Net Pay: {formatINR(withdrawal.finalAmount || withdrawal.amount)}
             </span>
           </div>
 

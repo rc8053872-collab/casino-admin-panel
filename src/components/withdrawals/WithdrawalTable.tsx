@@ -290,8 +290,13 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
                     <span className="font-bold text-slate-900 font-mono text-[13px]">
                       {formatINR(w.amount)}
                     </span>
-                    <div className="text-[10px] text-slate-400">
-                      Requested {getRelativeTime(w.requestedAt)}
+                    {w.feePercent !== undefined && w.feePercent > 0 && (
+                      <div className="text-[10px] text-amber-700 font-medium">
+                        Fee: -{formatINR(w.feeAmount || 0)} ({w.feePercent}%)
+                      </div>
+                    )}
+                    <div className="text-[11px] font-bold text-emerald-700 font-mono">
+                      Pay: {formatINR(w.finalAmount || w.amount)}
                     </div>
                   </div>
                 </td>

@@ -22,9 +22,9 @@ export const WithdrawalApproveModal: React.FC<WithdrawalApproveModalProps> = ({
   const [paidAmount, setPaidAmount] = useState('');
   const [paymentReference, setPaymentReference] = useState('');
   useEffect(() => {
-    setPaidAmount(withdrawal ? String(withdrawal.amount) : '');
+    setPaidAmount(withdrawal ? String(withdrawal.finalAmount || withdrawal.amount) : '');
     setPaymentReference('');
-  }, [withdrawal?.id, withdrawal?.amount, isOpen]);
+  }, [withdrawal?.id, withdrawal?.amount, withdrawal?.finalAmount, isOpen]);
   if (!isOpen || !withdrawal) return null;
 
   const destText =
@@ -96,27 +96,42 @@ export const WithdrawalApproveModal: React.FC<WithdrawalApproveModalProps> = ({
             )}
 
             <div className="flex justify-between items-center py-0.5 border-b border-slate-200/60">
-              <span className="text-slate-500">Amount:</span>
+              <span className="text-slate-500">Requested Amount:</span>
               <span className="text-base font-bold text-slate-900 font-mono">
                 {formatINR(withdrawal.amount)}
               </span>
             </div>
 
+            {withdrawal.feePercent !== undefined && withdrawal.feePercent > 0 && (
+              <div className="flex justify-between items-center py-0.5 border-b border-slate-200/60 text-amber-700">
+                <span className="font-medium">Platform Fee Cut ({withdrawal.feePercent}%):</span>
+                <span className="font-bold font-mono">
+                  - {formatINR(withdrawal.feeAmount || 0)}
+                </span>
+              </div>
+            )}
+
+            <div className="flex justify-between items-center py-1 border-b border-slate-200/60 bg-emerald-50/70 px-2 rounded-lg">
+              <span className="text-emerald-800 font-bold">Transfer to Player:</span>
+              <span className="text-base font-extrabold text-emerald-700 font-mono">
+                {formatINR(withdrawal.finalAmount || withdrawal.amount)}
+              </span>
+            </div>
+
             <label className="block space-y-1.5">
-              <span className="font-bold text-slate-700">Amount transferred (must match request)</span>
+              <span className="font-bold text-slate-700">Amount to send player (after admin fee cut)</span>
               <input
                 type="number"
-                min={withdrawal.amount}
-                max={withdrawal.amount}
-                step="1"
+                min="1"
+                step="any"
                 value={paidAmount}
                 onChange={event => setPaidAmount(event.target.value)}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800"
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 font-semibold"
               />
             </label>
 
             <label className="block space-y-1.5">
-              <span className="font-bold text-slate-700">Bank payment reference (optional)</span>
+              <span className="font-bold text-slate-700">Bank payment reference (UTR / IMPS Ref)</span>
               <input
                 type="text"
                 maxLength={100}
@@ -183,11 +198,11 @@ export const WithdrawalApproveModal: React.FC<WithdrawalApproveModalProps> = ({
             </button>
             <button
               type="button"
-              disabled={isLoading || Number(paidAmount) !== withdrawal.amount}
+              disabled={isLoading || !paidAmount || Number(paidAmount) <= 0}
               onClick={() => onConfirm(Number(paidAmount), paymentReference.trim())}
               className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold shadow-xs transition-colors disabled:opacity-50 flex items-center gap-1.5"
             >
-              {isLoading ? 'Saving...' : `Mark paid ${formatINR(Number(paidAmount) || withdrawal.amount)}`}
+              {isLoading ? 'Saving...' : `Mark paid ${formatINR(Number(paidAmount) || withdrawal.finalAmount || withdrawal.amount)}`}
             </button>
           </div>
         </motion.div>

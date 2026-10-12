@@ -41,6 +41,10 @@ export interface Withdrawal {
   amount: number;
   currency: 'INR';
 
+  feePercent?: number;
+  feeAmount?: number;
+  finalAmount?: number;
+
   method: PaymentRail;
   destination: WithdrawalDestination;
 
