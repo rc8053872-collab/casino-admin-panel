@@ -1,7 +1,7 @@
 import type { AdminUser, AuthResponse, AuthSession, LoginCredentials } from '../types/auth';
 import { sessionService } from './sessionService';
 
-const API_BASE = import.meta.env.VITE_GAME_API_URL || 'http://localhost:3001/api';
+const API_BASE = import.meta.env.VITE_GAME_API_URL || import.meta.env.VITE_API_URL || 'http://casino-baac-env.eba-9kvg9eap.ap-southeast-2.elasticbeanstalk.com/api';
 
 interface BackendAuthResponse {
   status: string;
