@@ -13,6 +13,7 @@ import {
   XCircle,
   MessageSquare,
   FileCheck,
+  Copy,
 } from 'lucide-react';
 import type { Withdrawal } from '../../types/withdrawal';
 import { formatINR } from '../../utils/currency';
@@ -163,21 +164,72 @@ export const WithdrawalComplianceDrawer: React.FC<WithdrawalComplianceDrawerProp
               <span className="font-bold text-slate-900 text-[11px] uppercase tracking-wider block">
                 Payout Payload
               </span>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2 text-xs">
                 <div>
-                  <span className="text-slate-400 text-[10px] uppercase">Requested Amount</span>
-                  <div className="text-base font-bold text-slate-900 font-mono">
+                  <span className="text-slate-400 text-[10px] uppercase block">Requested Amount</span>
+                  <div className="text-sm font-bold text-slate-900 font-mono">
                     {formatINR(withdrawal.amount)}
                   </div>
                 </div>
                 <div>
-                  <span className="text-slate-400 text-[10px] uppercase">Payment Rail</span>
-                  <div className="text-xs font-bold text-slate-800">{withdrawal.method}</div>
+                  <span className="text-slate-400 text-[10px] uppercase block">Net Pay to Player</span>
+                  <div className="text-sm font-extrabold text-emerald-700 font-mono">
+                    {formatINR(withdrawal.finalAmount || withdrawal.amount)}
+                  </div>
                 </div>
-                <div className="col-span-2">
-                  <span className="text-slate-400 text-[10px] uppercase">Destination</span>
-                  <div className="font-semibold text-slate-800 font-mono">{destText}</div>
-                </div>
+                {withdrawal.destination.type === 'bank' ? (
+                  <>
+                    <div className="col-span-2 py-1 border-t border-slate-200/60">
+                      <span className="text-slate-400 text-[10px] uppercase block">Account Holder Name</span>
+                      <div className="font-bold text-slate-900 text-xs">
+                        {withdrawal.destination.accountHolder || withdrawal.playerName}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 text-[10px] uppercase block">Bank Account No</span>
+                      <div className="flex items-center gap-1 font-mono font-bold text-slate-900 text-xs">
+                        <span>{withdrawal.destination.accountNumber || withdrawal.destination.maskedAccount || '—'}</span>
+                        {(withdrawal.destination.accountNumber || withdrawal.destination.maskedAccount) && (
+                          <button
+                            type="button"
+                            onClick={() => navigator.clipboard.writeText(withdrawal.destination.accountNumber || withdrawal.destination.maskedAccount || '')}
+                            className="text-slate-400 hover:text-blue-600 p-0.5"
+                            title="Copy Account Number"
+                          >
+                            <Copy className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 text-[10px] uppercase block">IFSC Code</span>
+                      <div className="flex items-center gap-1 font-mono font-bold text-slate-800 text-xs">
+                        <span>{withdrawal.destination.ifsc || '—'}</span>
+                        {withdrawal.destination.ifsc && (
+                          <button
+                            type="button"
+                            onClick={() => navigator.clipboard.writeText(withdrawal.destination.ifsc || '')}
+                            className="text-slate-400 hover:text-blue-600 p-0.5"
+                            title="Copy IFSC Code"
+                          >
+                            <Copy className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="col-span-2">
+                      <span className="text-slate-400 text-[10px] uppercase block">Branch Name</span>
+                      <div className="font-semibold text-slate-800 text-xs">
+                        {withdrawal.destination.branchName || '—'}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="col-span-2">
+                    <span className="text-slate-400 text-[10px] uppercase">Destination UPI</span>
+                    <div className="font-semibold text-slate-800 font-mono">{destText}</div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -317,31 +369,37 @@ export const WithdrawalComplianceDrawer: React.FC<WithdrawalComplianceDrawerProp
 
           {/* Footer Actions */}
           <div className="p-3 border-t border-slate-200 bg-slate-50/80 space-y-2 shrink-0">
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  onClose();
-                  onApprove(withdrawal);
-                }}
-                className="w-full py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold text-xs shadow-xs transition-colors flex items-center justify-center gap-1.5"
-              >
-                <CheckCircle className="w-3.5 h-3.5" />
-                <span>Approve Payout</span>
-              </button>
+            {withdrawal.status === 'pending' ? (
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onApprove(withdrawal);
+                  }}
+                  className="w-full py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold text-xs shadow-xs transition-colors flex items-center justify-center gap-1.5"
+                >
+                  <CheckCircle className="w-3.5 h-3.5" />
+                  <span>Approve Payout</span>
+                </button>
 
-              <button
-                type="button"
-                onClick={() => {
-                  onClose();
-                  onReject(withdrawal);
-                }}
-                className="w-full py-2 px-3 bg-white border border-rose-200 hover:bg-rose-50 text-rose-700 rounded-xl font-semibold text-xs transition-colors flex items-center justify-center gap-1.5"
-              >
-                <XCircle className="w-3.5 h-3.5 text-rose-600" />
-                <span>Reject & Revert</span>
-              </button>
-            </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onReject(withdrawal);
+                  }}
+                  className="w-full py-2 px-3 bg-white border border-rose-200 hover:bg-rose-50 text-rose-700 rounded-xl font-semibold text-xs transition-colors flex items-center justify-center gap-1.5"
+                >
+                  <XCircle className="w-3.5 h-3.5 text-rose-600" />
+                  <span>Reject & Revert</span>
+                </button>
+              </div>
+            ) : (
+              <div className="p-2.5 bg-slate-100 border border-slate-200/80 rounded-xl text-center text-[11px] text-slate-600 font-medium">
+                Withdrawal status is <span className="font-bold uppercase text-slate-800">{withdrawal.status}</span>. Payout decisions cannot be altered.
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-2">
               <button

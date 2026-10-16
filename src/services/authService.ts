@@ -1,7 +1,8 @@
 import type { AdminUser, AuthResponse, AuthSession, LoginCredentials } from '../types/auth';
 import { sessionService } from './sessionService';
 
-const API_BASE = import.meta.env.VITE_GAME_API_URL || import.meta.env.VITE_API_URL || 'http://casino-baac-env.eba-9kvg9eap.ap-southeast-2.elasticbeanstalk.com/api';
+const RAW_API_BASE = import.meta.env.VITE_GAME_API_URL || import.meta.env.VITE_API_URL || 'http://casino-baac-env.eba-9kvg9eap.ap-southeast-2.elasticbeanstalk.com/api';
+const API_BASE = RAW_API_BASE.replace(/\/+$/, '');
 
 interface BackendAuthResponse {
   status: string;

@@ -8,6 +8,7 @@ import {
   Receipt,
   Eye,
   ShieldAlert,
+  Copy,
 } from 'lucide-react';
 import type { Withdrawal, WithdrawalStatus, RiskTier } from '../../types/withdrawal';
 import { formatINR } from '../../utils/currency';
@@ -174,8 +175,8 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
               </div>
             </th>
 
-            {/* 5. DESTINATION ACCOUNT / MODE */}
-            <th className="px-3 py-3">DESTINATION ACCOUNT / MODE</th>
+            {/* 5. BANK & BENEFICIARY DETAILS */}
+            <th className="px-3 py-3">BANK & BENEFICIARY DETAILS</th>
 
             {/* 6. TURNOVER / RISK CHECK */}
             <th
@@ -250,7 +251,7 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
                   <div>
                     <button
                       type="button"
-                      onClick={() => navigate(`/admin/transactions/withdrawals/${w.payoutId}`)}
+                      onClick={() => navigate(`/admin/transactions/withdrawals/${w.id}`)}
                       className="font-mono font-bold text-blue-600 hover:underline hover:text-blue-700 text-xs text-left"
                     >
                       {w.payoutId}
@@ -301,14 +302,44 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
                   </div>
                 </td>
 
-                {/* 5. DESTINATION ACCOUNT / MODE */}
-                <td className="px-3 py-3 font-mono text-[11px] text-slate-700">
-                  <div>
-                    <span className="font-semibold text-slate-900 block truncate max-w-[170px]">
-                      {destText}
-                    </span>
-                    <span className="text-[10px] text-slate-400 uppercase">{w.method} Rail</span>
-                  </div>
+                {/* 5. BANK & BENEFICIARY DETAILS */}
+                <td className="px-3 py-3 text-[11px] text-slate-700">
+                  {w.destination.type === 'bank' ? (
+                    <div className="space-y-0.5">
+                      <div className="font-bold text-slate-900 flex items-center gap-1">
+                        <span>{w.destination.accountHolder || w.playerName}</span>
+                      </div>
+                      <div className="font-mono text-[11px] text-slate-800 flex items-center gap-1.5 font-semibold">
+                        <span>A/C: {w.destination.accountNumber || w.destination.maskedAccount || '—'}</span>
+                        {(w.destination.accountNumber || w.destination.maskedAccount) && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigator.clipboard.writeText(w.destination.accountNumber || w.destination.maskedAccount || '');
+                            }}
+                            className="text-slate-400 hover:text-blue-600 transition-colors p-0.5"
+                            title="Copy Account Number"
+                          >
+                            <Copy className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
+                      <div className="text-[10px] text-slate-500 font-mono flex items-center gap-2">
+                        <span>IFSC: <strong className="text-slate-700">{w.destination.ifsc || '—'}</strong></span>
+                        {w.destination.branchName && (
+                          <span>• {w.destination.branchName}</span>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <span className="font-semibold text-slate-900 block truncate max-w-[170px]">
+                        {destText}
+                      </span>
+                      <span className="text-[10px] text-slate-400 uppercase">{w.method} Rail</span>
+                    </div>
+                  )}
                 </td>
 
                 {/* 6. TURNOVER / RISK CHECK */}
@@ -375,7 +406,7 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
                     {w.status === 'processing' && (
                       <button
                         type="button"
-                        onClick={() => navigate(`/admin/transactions/withdrawals/${w.payoutId}`)}
+                        onClick={() => navigate(`/admin/transactions/withdrawals/${w.id}`)}
                         className="px-2.5 py-1 bg-white border border-blue-200 hover:bg-blue-50 text-blue-700 rounded-lg font-semibold text-xs transition-colors flex items-center gap-1"
                       >
                         <Clock className="w-3 h-3" />
@@ -408,7 +439,7 @@ export const WithdrawalTable: React.FC<WithdrawalTableProps> = ({
                     {/* More Details Button */}
                     <button
                       type="button"
-                      onClick={() => navigate(`/admin/transactions/withdrawals/${w.payoutId}`)}
+                      onClick={() => navigate(`/admin/transactions/withdrawals/${w.id}`)}
                       className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
                       title="Inspect full details"
                     >

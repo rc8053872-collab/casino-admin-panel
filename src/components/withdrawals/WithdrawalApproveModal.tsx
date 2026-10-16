@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, ShieldCheck, Copy } from 'lucide-react';
 import type { Withdrawal } from '../../types/withdrawal';
 import { formatINR } from '../../utils/currency';
 
@@ -75,7 +75,7 @@ export const WithdrawalApproveModal: React.FC<WithdrawalApproveModalProps> = ({
           {/* Details Card */}
           <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3.5 space-y-2.5">
             <div className="flex justify-between items-center py-0.5 border-b border-slate-200/60">
-              <span className="text-slate-500">Player:</span>
+              <span className="text-slate-500">Player ID / Username:</span>
               <span className="font-bold text-slate-900">
                 {withdrawal.playerName}{' '}
                 <span className="text-slate-400 font-normal">({withdrawal.playerId})</span>
@@ -85,11 +85,45 @@ export const WithdrawalApproveModal: React.FC<WithdrawalApproveModalProps> = ({
             {withdrawal.destination.type === 'bank' && (
               <>
                 <div className="flex justify-between items-center py-0.5 border-b border-slate-200/60">
-                  <span className="text-slate-500">IFSC:</span>
-                  <span className="font-semibold text-slate-800">{withdrawal.destination.ifsc || '—'}</span>
+                  <span className="text-slate-500">Account Holder Name:</span>
+                  <span className="font-bold text-blue-900 text-xs">
+                    {withdrawal.destination.accountHolder || withdrawal.playerName}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center py-0.5 border-b border-slate-200/60">
-                  <span className="text-slate-500">Branch:</span>
+                  <span className="text-slate-500">Bank Account Number:</span>
+                  <div className="flex items-center gap-1.5 font-mono font-bold text-slate-900">
+                    <span>{withdrawal.destination.accountNumber || withdrawal.destination.maskedAccount || '—'}</span>
+                    {(withdrawal.destination.accountNumber || withdrawal.destination.maskedAccount) && (
+                      <button
+                        type="button"
+                        onClick={() => navigator.clipboard.writeText(withdrawal.destination.accountNumber || withdrawal.destination.maskedAccount || '')}
+                        className="text-slate-400 hover:text-blue-600 p-0.5"
+                        title="Copy Account Number"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <div className="flex justify-between items-center py-0.5 border-b border-slate-200/60">
+                  <span className="text-slate-500">IFSC Code:</span>
+                  <div className="flex items-center gap-1.5 font-mono font-semibold text-slate-800">
+                    <span>{withdrawal.destination.ifsc || '—'}</span>
+                    {withdrawal.destination.ifsc && (
+                      <button
+                        type="button"
+                        onClick={() => navigator.clipboard.writeText(withdrawal.destination.ifsc || '')}
+                        className="text-slate-400 hover:text-blue-600 p-0.5"
+                        title="Copy IFSC Code"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <div className="flex justify-between items-center py-0.5 border-b border-slate-200/60">
+                  <span className="text-slate-500">Branch Name:</span>
                   <span className="font-semibold text-slate-800">{withdrawal.destination.branchName || '—'}</span>
                 </div>
               </>

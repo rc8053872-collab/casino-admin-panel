@@ -31,7 +31,14 @@ interface WithdrawalListResponse {
 function mapWithdrawal(item: BackendWithdrawal): Withdrawal {
   const metadata = item.metadata && typeof item.metadata === 'object'
     ? item.metadata as {
-        bank?: { accountNumber?: string; ifscCode?: string; branchName?: string };
+        bank?: {
+          accountNumber?: string;
+          ifscCode?: string;
+          branchName?: string;
+          accountHolder?: string;
+          accountHolderName?: string;
+          userName?: string;
+        };
         rejectionReason?: string;
         underReview?: boolean;
         feePercent?: number;
@@ -42,6 +49,7 @@ function mapWithdrawal(item: BackendWithdrawal): Withdrawal {
     : {};
   const bank = metadata.bank || {};
   const username = item.wallet.user.username || item.wallet.user.email || item.wallet.user.mobile || 'Player';
+  const holderName = bank.accountHolder || bank.accountHolderName || bank.userName || username;
   const initials = username.split(/[\s._@+-]+/).filter(Boolean).slice(0, 2).map(part => part[0]).join('').toUpperCase() || 'PL';
   const status = metadata.underReview && item.status === 'PENDING'
     ? 'compliance_review'
@@ -67,12 +75,12 @@ function mapWithdrawal(item: BackendWithdrawal): Withdrawal {
     method: 'IMPS',
     destination: {
       type: 'bank',
-      bankName: 'Bank transfer',
+      bankName: 'Bank Transfer',
       accountNumber: bank.accountNumber,
       maskedAccount: bank.accountNumber,
       branchName: bank.branchName,
       ifsc: bank.ifscCode,
-      accountHolder: username
+      accountHolder: holderName
     },
     status,
     riskTier: 'low',
@@ -92,12 +100,29 @@ function backendStatus(tab?: WithdrawalStatusTab): string {
 }
 
 function downloadCsv(withdrawals: Withdrawal[]) {
-  const headers = ['Payout ID', 'Player', 'Amount', 'Account Number', 'IFSC', 'Branch', 'Requested At', 'Status'];
+  const headers = [
+    'Payout ID',
+    'Player ID',
+    'Player Username',
+    'Account Holder Name',
+    'Gross Requested Amount (INR)',
+    'Platform Fee Cut (INR)',
+    'Net Amount to Pay (INR)',
+    'Bank Account Number',
+    'IFSC Code',
+    'Branch Name',
+    'Requested At',
+    'Status'
+  ];
   const rows = withdrawals.map(item => [
     item.payoutId,
-    item.playerName,
+    item.playerId,
+    item.username,
+    item.destination.accountHolder || item.playerName,
     String(item.amount),
-    item.destination.accountNumber || '',
+    String(item.feeAmount || 0),
+    String(item.finalAmount || item.amount),
+    item.destination.accountNumber || item.destination.maskedAccount || '',
     item.destination.ifsc || '',
     item.destination.branchName || '',
     item.requestedAt,
@@ -125,8 +150,16 @@ export const withdrawalService = {
     if (params.search?.trim()) {
       const search = params.search.trim().toLowerCase();
       withdrawals = withdrawals.filter(item =>
-        [item.payoutId, item.playerId, item.playerName, item.destination.accountNumber, item.destination.ifsc]
-          .some(value => value?.toLowerCase().includes(search))
+        [
+          item.payoutId,
+          item.playerId,
+          item.playerName,
+          item.username,
+          item.destination.accountHolder,
+          item.destination.accountNumber,
+          item.destination.ifsc,
+          item.destination.branchName
+        ].some(value => value?.toLowerCase().includes(search))
       );
     }
     return {
@@ -147,19 +180,44 @@ export const withdrawalService = {
   },
 
   async getWithdrawal(id: string): Promise<Withdrawal | null> {
-    try {
-      const result = await adminRequest<BackendWithdrawal>(`/admin/withdrawals/${encodeURIComponent(id)}`);
-      return mapWithdrawal(result);
-    } catch (error) {
-      if (error instanceof Error && error.message.includes('Withdrawal not found')) return null;
-      throw error;
+    const trimmedId = id.trim();
+    const isObjectId = /^[0-9a-fA-F]{24}$/.test(trimmedId);
+
+    if (isObjectId) {
+      try {
+        const result = await adminRequest<BackendWithdrawal>(`/admin/withdrawals/${encodeURIComponent(trimmedId)}`);
+        return mapWithdrawal(result);
+      } catch (error) {
+        // Fallback to searching the withdrawal queue below
+      }
     }
+
+    // Fallback: Support payoutId (e.g. 8-char suffix like "9882C70F") or queue search
+    try {
+      const response = await adminRequest<WithdrawalListResponse>('/admin/withdrawals?limit=100');
+      const found = response.withdrawals.find(item =>
+        item.id === trimmedId ||
+        item.id.toLowerCase().endsWith(trimmedId.toLowerCase()) ||
+        item.id.slice(-8).toUpperCase() === trimmedId.toUpperCase()
+      );
+      if (found) {
+        return mapWithdrawal(found);
+      }
+    } catch {
+      // Fallback failed
+    }
+
+    return null;
   },
 
   async approveWithdrawal(id: string, amount: number, paymentReference = ''): Promise<Withdrawal> {
     const withdrawal = await this.getWithdrawal(id);
     if (!withdrawal) throw new Error('Withdrawal not found.');
-    await adminRequest<{ message: string }>(`/admin/withdrawals/${encodeURIComponent(id)}/approve`, {
+    if (withdrawal.status !== 'pending') {
+      throw new Error(`Withdrawal is already ${withdrawal.status.toUpperCase()} and cannot be approved again.`);
+    }
+
+    await adminRequest<{ message: string }>(`/admin/withdrawals/${encodeURIComponent(withdrawal.id)}/approve`, {
       method: 'POST',
       body: JSON.stringify({ amount, paymentReference })
     });
@@ -175,7 +233,11 @@ export const withdrawalService = {
   async rejectWithdrawal(id: string, reason: string): Promise<Withdrawal> {
     const withdrawal = await this.getWithdrawal(id);
     if (!withdrawal) throw new Error('Withdrawal not found.');
-    await adminRequest<{ message: string }>(`/admin/withdrawals/${encodeURIComponent(id)}/reject`, {
+    if (withdrawal.status !== 'pending') {
+      throw new Error(`Withdrawal is already ${withdrawal.status.toUpperCase()} and cannot be rejected again.`);
+    }
+
+    await adminRequest<{ message: string }>(`/admin/withdrawals/${encodeURIComponent(withdrawal.id)}/reject`, {
       method: 'POST',
       body: JSON.stringify({ reason })
     });

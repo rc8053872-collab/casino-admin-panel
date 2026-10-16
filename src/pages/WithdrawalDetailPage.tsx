@@ -11,6 +11,7 @@ import {
   Building,
   ExternalLink,
   Receipt,
+  Copy,
 } from 'lucide-react';
 import {
   useWithdrawal,
@@ -50,8 +51,8 @@ export const WithdrawalDetailPage: React.FC = () => {
         `₹${withdrawal.amount.toLocaleString('en-IN')} marked paid for ${withdrawal.playerName}.`
       );
       setIsApproveOpen(false);
-    } catch {
-      toast.error('Approval Failed', 'Unable to approve request.');
+    } catch (error) {
+      toast.error('Approval Failed', error instanceof Error ? error.message : 'Unable to approve request.');
     }
   };
 
@@ -64,8 +65,8 @@ export const WithdrawalDetailPage: React.FC = () => {
         `${withdrawal.payoutId} rejected: ${reason}. Funds reverted.`
       );
       setIsRejectOpen(false);
-    } catch {
-      toast.error('Rejection Failed', 'Unable to reject request.');
+    } catch (error) {
+      toast.error('Rejection Failed', error instanceof Error ? error.message : 'Unable to reject request.');
     }
   };
 
@@ -259,12 +260,40 @@ export const WithdrawalDetailPage: React.FC = () => {
                   <span className="font-semibold text-slate-800">{withdrawal.destination.bankName}</span>
                 </div>
                 <div className="flex justify-between py-1 border-b border-slate-50">
-                  <span className="text-slate-400">Masked Account:</span>
-                  <span className="font-mono font-bold text-slate-900">{withdrawal.destination.maskedAccount}</span>
+                  <span className="text-slate-400">Bank Account Number:</span>
+                  <div className="flex items-center gap-1.5 font-mono font-bold text-slate-900">
+                    <span>{withdrawal.destination.accountNumber || withdrawal.destination.maskedAccount || '—'}</span>
+                    {(withdrawal.destination.accountNumber || withdrawal.destination.maskedAccount) && (
+                      <button
+                        type="button"
+                        onClick={() => navigator.clipboard.writeText(withdrawal.destination.accountNumber || withdrawal.destination.maskedAccount || '')}
+                        className="text-slate-400 hover:text-blue-600 p-0.5"
+                        title="Copy Account Number"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <div className="flex justify-between py-1 border-b border-slate-50">
+                  <span className="text-slate-400">IFSC Code:</span>
+                  <div className="flex items-center gap-1.5 font-mono text-slate-700">
+                    <span>{withdrawal.destination.ifsc || '—'}</span>
+                    {withdrawal.destination.ifsc && (
+                      <button
+                        type="button"
+                        onClick={() => navigator.clipboard.writeText(withdrawal.destination.ifsc || '')}
+                        className="text-slate-400 hover:text-blue-600 p-0.5"
+                        title="Copy IFSC Code"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className="flex justify-between py-1">
-                  <span className="text-slate-400">IFSC Code:</span>
-                  <span className="font-mono text-slate-700">{withdrawal.destination.ifsc}</span>
+                  <span className="text-slate-400">Branch Name:</span>
+                  <span className="font-semibold text-slate-800">{withdrawal.destination.branchName || '—'}</span>
                 </div>
               </>
             ) : (

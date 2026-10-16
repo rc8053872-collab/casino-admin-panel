@@ -119,8 +119,8 @@ export const WithdrawalsPage: React.FC = () => {
         `₹${approvingWithdrawal.amount.toLocaleString('en-IN')} marked paid for ${approvingWithdrawal.playerName}.`
       );
       setApprovingWithdrawal(null);
-    } catch {
-      toast.error('Approval Failed', 'Unable to approve request.');
+    } catch (error) {
+      toast.error('Approval Failed', error instanceof Error ? error.message : 'Unable to approve request.');
     }
   };
 
@@ -133,8 +133,8 @@ export const WithdrawalsPage: React.FC = () => {
         `${rejectingWithdrawal.payoutId} rejected: ${reason}. Funds reverted to wallet.`
       );
       setRejectingWithdrawal(null);
-    } catch {
-      toast.error('Rejection Failed', 'Unable to reject request.');
+    } catch (error) {
+      toast.error('Rejection Failed', error instanceof Error ? error.message : 'Unable to reject request.');
     }
   };
 
