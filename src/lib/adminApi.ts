@@ -15,13 +15,16 @@ export async function adminRequest<T>(path: string, init: RequestInit = {}): Pro
       ...init.headers
     }
   });
-  const result = await response.json().catch(() => ({})) as { error?: string; message?: string } & T;
+  const result = await response.json().catch(() => ({})) as any;
   if (!response.ok) {
     if (response.status === 401) {
       sessionService.clearSession();
       window.location.assign('/admin/login');
     }
-    throw new Error(result.error || result.message || `Admin API request failed (${response.status}).`);
+    const errorMsg = typeof result?.error === 'string'
+      ? result.error
+      : result?.error?.message || result?.message || `Admin API request failed (${response.status}).`;
+    throw new Error(errorMsg);
   }
-  return result;
+  return result as T;
 }

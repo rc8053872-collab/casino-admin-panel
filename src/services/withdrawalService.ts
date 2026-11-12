@@ -48,7 +48,8 @@ function mapWithdrawal(item: BackendWithdrawal): Withdrawal {
       }
     : {};
   const bank = metadata.bank || {};
-  const username = item.wallet.user.username || item.wallet.user.email || item.wallet.user.mobile || 'Player';
+  const user = item.wallet?.user || { id: 'Unknown', username: 'Player', email: null, mobile: null };
+  const username = user.username || user.email || user.mobile || 'Player';
   const holderName = bank.accountHolder || bank.accountHolderName || bank.userName || username;
   const initials = username.split(/[\s._@+-]+/).filter(Boolean).slice(0, 2).map(part => part[0]).join('').toUpperCase() || 'PL';
   const status = metadata.underReview && item.status === 'PENDING'
@@ -62,7 +63,7 @@ function mapWithdrawal(item: BackendWithdrawal): Withdrawal {
   return {
     id: item.id,
     payoutId: item.id.slice(-8).toUpperCase(),
-    playerId: item.wallet.user.id,
+    playerId: user.id || 'N/A',
     playerName: username,
     username,
     playerTier: 'Member',

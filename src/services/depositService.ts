@@ -33,22 +33,22 @@ function mapDeposit(item: BackendDeposit): DepositItem {
   const metadata = item.metadata && typeof item.metadata === 'object' && !Array.isArray(item.metadata)
     ? item.metadata as { utrNumber?: string; proofDataUrl?: string }
     : {};
-  const user = item.wallet.user;
+  const user = item.wallet?.user || { id: 'Unknown', username: 'Player', email: null, mobile: null };
   const playerName = user.username || user.email || user.mobile || 'Player';
   const initials = playerName.split(/[\s._@+-]+/).filter(Boolean).slice(0, 2).map(part => part[0]).join('').toUpperCase() || 'PL';
   return {
     id: item.id,
-    playerId: user.id,
+    playerId: user.id || 'N/A',
     playerName,
     playerAvatar: initials,
     playerTier: 'Member',
-    amount: Number(item.amount),
+    amount: Number(item.amount || 0),
     fee: 0,
-    netCredit: Number(item.amount),
+    netCredit: Number(item.amount || 0),
     gateway: 'UPI',
     gatewayRef: metadata.utrNumber || item.referenceId || '',
-    timeAgo: formatTimeAgo(item.createdAt),
-    timestamp: item.createdAt,
+    timeAgo: item.createdAt ? formatTimeAgo(item.createdAt) : 'Recently',
+    timestamp: item.createdAt || new Date().toISOString(),
     status: item.status === 'COMPLETED' ? 'success' : item.status === 'FAILED' ? 'failed' : 'processing',
     settlementSpeed: item.status === 'PENDING' ? 'Awaiting admin review' : 'Manual review',
     proofDataUrl: metadata.proofDataUrl,

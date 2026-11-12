@@ -80,12 +80,13 @@ export class TransactionHistoryService {
     });
     const response = await adminRequest<ApiResponse>(`/admin/transactions?${query.toString()}`);
     let records = response.transactions.map((transaction) => {
-      const player = transaction.wallet.user;
-      const initials = player.username.slice(0, 2).toUpperCase();
+      const player = transaction.wallet?.user || { id: 'Unknown', username: 'Player', email: null, mobile: null };
+      const playerName = player.username || player.email || player.mobile || 'Player';
+      const initials = playerName.slice(0, 2).toUpperCase();
       return {
         id: transaction.id,
         playerId: player.id,
-        playerName: player.username,
+        playerName,
         playerAvatar: initials,
         type: transaction.type === 'DEPOSIT' ? 'Deposit' as const : 'Withdrawal' as const,
         amount: Number(transaction.amount),
